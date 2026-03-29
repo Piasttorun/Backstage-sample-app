@@ -1,0 +1,111 @@
+app:
+  title: DevOps Portal
+  baseUrl: http://localhost:3000
+
+  packages: all
+
+  extensions:
+    - page:catalog:
+        config:
+          path: /
+
+organization:
+  name: backstage-sample-app
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  # auth.keys set in app-config.local.yaml (local dev) and app-config.production.yaml (prod)
+  # Default: SQLite in-memory for running without Docker.
+  # Overridden to PostgreSQL in app-config.local.yaml when using Docker Compose.
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+
+integrations:
+  gitlab:
+    - host: gitlab.com
+      token: ${GITLAB_TOKEN}
+
+proxy:
+  ### Add proxy endpoints here if needed
+  # endpoints:
+  #   '/my-service':
+  #     target: 'https://internal.example.com'
+  #     changeOrigin: true
+
+# TechDocs: 'local' builder runs mkdocs in Docker on demand.
+# For production (Phase 3) switch builder to 'external' and publish pre-built
+# docs from CI to an S3 bucket.
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'docker'
+  publisher:
+    type: 'local'
+
+auth:
+  environment: development
+  providers:
+    # Guest allows unauthenticated access in development — required for the UI to load
+    # without being signed in. Remove this in production.
+    guest: {}
+    gitlab:
+      development:
+        clientId: ${GITLAB_OAUTH_CLIENT_ID}
+        clientSecret: ${GITLAB_OAUTH_CLIENT_SECRET}
+        # audience defaults to https://gitlab.com
+        signIn:
+          resolvers:
+            - resolver: usernameMatchingUserEntityName
+
+scaffolder:
+  # see https://backstage.io/docs/features/software-templates/configuration
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, User, Group, Template]
+
+  locations:
+    # ── Local example data (bundled with Backstage) ──────────────────────────
+    - type: file
+      target: ../../examples/entities.yaml
+
+    - type: file
+      target: ../../examples/template/template.yaml
+      rules:
+        - allow: [Template]
+
+    - type: file
+      target: ../../examples/org.yaml
+      rules:
+        - allow: [User, Group]
+
+    # ── GitLab: java-sample-service ──────────────────────────────────────────
+    # Static location for the single pilot repo.
+    # Once a catalog-info.yaml exists in the repo this will auto-register it.
+    - type: url
+      target: https://gitlab.com/m.n.mati2002/java-sample-service/-/blob/master/catalog-info.yaml
+      rules:
+        - allow: [Component, API]
+
+    # ── GitLab Group Discovery (Phase 3 — uncomment when using a real group) ──
+    # When you have a GitLab group (not a personal namespace) replace the static
+    # location above with the discovery provider configured in the backend plugin.
+    # See: packages/backend/src/index.ts and docs in README.
+
+kubernetes:
+  # see https://backstage.io/docs/features/kubernetes/configuration
+
+permission:
+  enabled: true
