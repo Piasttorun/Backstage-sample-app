@@ -1,0 +1,67 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: java-sample-service
+  description: Sample Spring Boot service with a GET / endpoint returning "Spring is here"
+  annotations:
+    gitlab.com/project-slug: m.n.mati2002/java-sample-service
+    backstage.io/techdocs-ref: dir:.
+    devops.io/last-pipeline-status: unknown
+    devops.io/last-test-pass-rate: unknown
+    devops.io/last-coverage: unknown
+    devops.io/last-pipeline-timestamp: unknown
+  tags:
+    - java
+    - spring-boot
+    - rest-api
+  links:
+    - url: https://gitlab.com/m.n.mati2002/java-sample-service
+      title: GitLab Repository
+      icon: gitlab
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:default/m.n.mati2002
+  system: devops-sandbox
+  providesApis:
+    - java-sample-service-api
+
+---
+
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: java-sample-service-api
+  description: REST API exposed by java-sample-service
+  tags:
+    - java
+    - spring-boot
+    - rest
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: user:default/m.n.mati2002
+  system: devops-sandbox
+  definition: |
+    openapi: "3.0.3"
+    info:
+      title: java-sample-service
+      description: Sample Spring Boot REST service
+      version: "1.0.0"
+    servers:
+      - url: http://localhost:8080
+        description: Local development
+    paths:
+      /:
+        get:
+          summary: Health greeting
+          description: Returns a plain-text greeting confirming the service is running.
+          operationId: getRoot
+          responses:
+            "200":
+              description: Service is running
+              content:
+                text/plain:
+                  schema:
+                    type: string
+                    example: "Spring is here!"
